@@ -14,6 +14,13 @@ import org.gradle.nativeplatform.NativeBinarySpec
 import org.gradle.nativeplatform.test.tasks.RunTestExecutable
 
 class GcovPlugin extends RuleSource {
+    private static final String COVERAGE_FOLDER = 'coverage'
+
+    private static final String TASK_MAIN = 'gcov'
+    private static final String TASK_CAPTURE = 'gcovCapture'
+    private static final String TASK_HTML = 'gcovHtml'
+    private static final String TASK_XML = 'gcovXml'
+
     @Model
     void gcov(GcovSpec spec) {}
 
@@ -26,37 +33,39 @@ class GcovPlugin extends RuleSource {
     }
 
     @Defaults
-    void createGcovTasks(ModelMap<Task> tasks, GcovSpec gcov) {
-        tasks.create('gcov', Task) { Task task ->
-            task.dependsOn 'gcovHtml', 'gcovXml'
+    void createGcovTasks(ModelMap<Task> tasks, GcovSpec gcov, @Path('buildDir') File buildDir) {
+        tasks.create(TASK_MAIN, Task) { Task task ->
+            task.dependsOn TASK_HTML, TASK_XML
             task.group 'Code coverage'
             task.description 'Runs gcov code coverage on available unit tests.'
         }
 
-        tasks.create('gcovHtml', GcovTask) { GcovTask task ->
+        tasks.create(TASK_HTML, GcovTask) { GcovTask task ->
             task.enabled = gcov.htmlEnabled
             if (gcov.workingDir) {
                 task.workingDir = gcov.workingDir
             }
             task.sourceDir = gcov.sourceDir
-            task.setFormat GcovTask.OutputFormat.HTML
-            task.dependsOn 'gcovCapture'
+            task.resultsDir = "${buildDir}/${COVERAGE_FOLDER}/html"
+            task.format = GcovTask.OutputFormat.HTML
+            task.dependsOn TASK_CAPTURE
         }
 
-        tasks.create('gcovXml', GcovTask) { GcovTask task ->
+        tasks.create(TASK_XML, GcovTask) { GcovTask task ->
             task.enabled = gcov.xmlEnabled
             if (gcov.workingDir) {
                 task.workingDir = gcov.workingDir
             }
             task.sourceDir = gcov.sourceDir
-            task.setFormat GcovTask.OutputFormat.XML
-            task.dependsOn 'gcovCapture'
+            task.resultsDir = "${buildDir}/${COVERAGE_FOLDER}/xml"
+            task.format = GcovTask.OutputFormat.XML
+            task.dependsOn TASK_CAPTURE
         }
     }
 
     @Mutate
     void addBinariesToGcov(ModelMap<Task> tasks, GcovSpec gcov, @Path('binaries') ModelMap<NativeBinarySpec> binaries) {
-        tasks.create('gcovCapture', Task) { Task containerTask ->
+        tasks.create(TASK_CAPTURE, Task) { Task containerTask ->
             binaries.each { NativeBinarySpec binary ->
                 gcov.binaryFilter.delegate = binary
                 gcov.binaryFilter.resolveStrategy = Closure.DELEGATE_FIRST

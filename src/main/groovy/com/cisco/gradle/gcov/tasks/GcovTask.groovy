@@ -1,48 +1,49 @@
 package com.cisco.gradle.gcov.tasks
 
-import org.gradle.api.tasks.Exec
+import org.gradle.api.DefaultTask
+import org.gradle.api.tasks.TaskAction
+import org.gradle.process.ExecSpec
 
-class GcovTask extends Exec {
+class GcovTask extends DefaultTask {
     enum OutputFormat {
         HTML, XML
     }
 
-    File resultsDir = project.file("${project.buildDir}/coverage")
+    Object gcovr = 'gcovr'
+    Object workingDir = project.projectDir
     String sourceDir
+    Object resultsDir
+    OutputFormat format
 
-    private File resultsFile
-
-    GcovTask() {
-        executable = 'gcovr'
+    File getResultsDir() {
+        return project.file(resultsDir)
     }
 
-    @Override
+    @TaskAction
     protected void exec() {
-        if (resultsFile) {
-            resultsFile.parentFile.mkdirs()
+        File resultsFile
+
+        if (format == OutputFormat.XML) {
+            resultsFile = new File(getResultsDir(), "${project.name}.xml")
+        } else {
+            resultsFile = new File(getResultsDir(), 'index.html')
         }
 
-        args '-r', sourceDir
+        resultsFile.parentFile.mkdirs()
 
-        super.exec()
+        project.exec { ExecSpec spec ->
+            spec.executable gcovr
+            spec.workingDir workingDir
+            spec.args '-r', sourceDir, '-o', resultsFile.path
 
-        if (resultsFile) {
-            URI resultsUri = new URI("file", "", resultsFile.toURI().getPath(), null, null)
-            logger.lifecycle("Coverage results saved to ${resultsUri}")
+            if (format == OutputFormat.XML) {
+                spec.args '--xml'
+            } else {
+                spec.args '--html', '--html-details'
+            }
         }
-    }
 
-    void setFormat(OutputFormat format) {
-        switch (format) {
-            case OutputFormat.HTML:
-                resultsFile = project.file("${resultsDir}/index.html")
-                args '--html', '--html-details', '-o', resultsFile.path
-                break
-
-            case OutputFormat.XML:
-                resultsFile = project.file("${resultsDir}/${project.name}.xml")
-                args '--xml', '-o', resultsFile.path
-                break
-        }
+        URI resultsUri = new URI("file", "", resultsFile.toURI().getPath(), null, null)
+        logger.lifecycle("Coverage results saved to ${resultsUri}")
     }
 }
