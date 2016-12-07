@@ -21,6 +21,8 @@ class GcovResetTask extends DefaultTask {
             it.delete gcovFiles
         }
 
-        timestampFile.text = new Date().toString()
+        if (inputs.hasInputs) {
+            timestampFile.text = new Date().toString()
+        }
     }
 }

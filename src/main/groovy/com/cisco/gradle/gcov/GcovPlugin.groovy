@@ -65,7 +65,7 @@ class GcovPlugin extends RuleSource {
         }
 
         tasks.create(TASK_RESET, GcovResetTask) { GcovResetTask task ->
-            task.timestampFile = new File(buildDir, 'timestamp')
+            task.timestampFile = new File(coverageFolder, 'timestamp')
 
             filteredTasks*.withType(InstallExecutable) { InstallExecutable installTask ->
                 task.dependsOn installTask
