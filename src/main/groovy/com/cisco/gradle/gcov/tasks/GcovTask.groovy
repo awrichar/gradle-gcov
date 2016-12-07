@@ -1,6 +1,10 @@
 package com.cisco.gradle.gcov.tasks
 
 import org.gradle.api.DefaultTask
+import org.gradle.api.file.FileCollection
+import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.SkipWhenEmpty
 import org.gradle.api.tasks.TaskAction
 import org.gradle.process.ExecSpec
 
@@ -10,11 +14,20 @@ class GcovTask extends DefaultTask {
     }
 
     Object gcovr = 'gcovr'
-    Object workingDir = project.projectDir
+    Object workingDir
     String sourceDir
     Object resultsDir
     OutputFormat format
 
+    @InputFiles
+    @SkipWhenEmpty
+    FileCollection getGcovFiles() {
+        return project.fileTree(project.buildDir) {
+            it.include '**/*.gcda'
+        }
+    }
+
+    @OutputDirectory
     File getResultsDir() {
         return project.file(resultsDir)
     }
@@ -33,8 +46,11 @@ class GcovTask extends DefaultTask {
 
         project.exec { ExecSpec spec ->
             spec.executable gcovr
-            spec.workingDir workingDir
             spec.args '-r', sourceDir, '-o', resultsFile.path
+
+            if (workingDir) {
+                spec.workingDir workingDir
+            }
 
             if (format == OutputFormat.XML) {
                 spec.args '--xml'
