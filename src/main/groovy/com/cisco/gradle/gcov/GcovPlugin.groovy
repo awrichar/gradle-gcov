@@ -16,7 +16,7 @@ import org.gradle.nativeplatform.tasks.InstallExecutable
 import org.gradle.nativeplatform.test.tasks.RunTestExecutable
 
 class GcovPlugin extends RuleSource {
-    private static final String COVERAGE_FOLDER = 'coverage'
+    private static final String COVERAGE_FOLDER = 'gcov'
 
     private static final String TASK_MAIN = 'gcov'
     private static final String TASK_RESET = 'gcovReset'
@@ -49,6 +49,7 @@ class GcovPlugin extends RuleSource {
 
         Collection<NativeBinarySpec> filteredBinaries = filterBinaries(binaries, gcov.binaryFilter)
         Collection<TaskContainer> filteredTasks = filteredBinaries*.tasks
+        File coverageFolder = new File(buildDir, COVERAGE_FOLDER)
 
         filteredBinaries.each { NativeBinarySpec binary ->
             binary.cCompiler.args '-fprofile-arcs', '-ftest-coverage'
@@ -60,6 +61,7 @@ class GcovPlugin extends RuleSource {
             task.dependsOn TASK_HTML, TASK_XML
             task.group 'Code coverage'
             task.description 'Runs gcov code coverage on available unit tests.'
+            task.outputs.dir coverageFolder
         }
 
         tasks.create(TASK_RESET, GcovResetTask) { GcovResetTask task ->
@@ -78,7 +80,7 @@ class GcovPlugin extends RuleSource {
 
         tasks.create(TASK_HTML, GcovRunTask) { GcovRunTask task ->
             task.enabled = gcov.htmlEnabled
-            task.resultsDir = "${buildDir}/${COVERAGE_FOLDER}/html"
+            task.resultsDir = new File(coverageFolder, 'html')
             task.format = GcovRunTask.OutputFormat.HTML
 
             filteredTasks*.withType(RunTestExecutable) { RunTestExecutable runTask ->
@@ -88,7 +90,7 @@ class GcovPlugin extends RuleSource {
 
         tasks.create(TASK_XML, GcovRunTask) { GcovRunTask task ->
             task.enabled = gcov.xmlEnabled
-            task.resultsDir = "${buildDir}/${COVERAGE_FOLDER}/xml"
+            task.resultsDir = new File(coverageFolder, 'xml')
             task.format = GcovRunTask.OutputFormat.XML
 
             filteredTasks*.withType(RunTestExecutable) { RunTestExecutable runTask ->
