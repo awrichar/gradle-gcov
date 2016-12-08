@@ -8,7 +8,7 @@ import org.gradle.api.tasks.SkipWhenEmpty
 import org.gradle.api.tasks.TaskAction
 import org.gradle.process.ExecSpec
 
-class GcovRunTask extends DefaultTask {
+class GcovReportTask extends DefaultTask {
     enum OutputFormat {
         HTML, XML
     }

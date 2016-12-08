@@ -1,7 +1,7 @@
 package com.cisco.gradle.gcov
 
 import com.cisco.gradle.gcov.tasks.GcovResetTask
-import com.cisco.gradle.gcov.tasks.GcovRunTask
+import com.cisco.gradle.gcov.tasks.GcovReportTask
 import org.gradle.api.Task
 import org.gradle.api.tasks.TaskContainer
 import org.gradle.model.Defaults
@@ -35,7 +35,7 @@ class GcovPlugin extends RuleSource {
     }
 
     @Defaults
-    void setGcovTaskDefaults(@Each GcovRunTask task, GcovSpec gcov) {
+    void setGcovTaskDefaults(@Each GcovReportTask task, GcovSpec gcov) {
         task.workingDir = gcov.workingDir
         task.sourceDir = gcov.sourceDir
         task.dependsOn TASK_RESET
@@ -78,20 +78,20 @@ class GcovPlugin extends RuleSource {
             }
         }
 
-        tasks.create(TASK_HTML, GcovRunTask) { GcovRunTask task ->
+        tasks.create(TASK_HTML, GcovReportTask) { GcovReportTask task ->
             task.enabled = gcov.htmlEnabled
             task.resultsDir = new File(coverageFolder, 'html')
-            task.format = GcovRunTask.OutputFormat.HTML
+            task.format = GcovReportTask.OutputFormat.HTML
 
             filteredTasks*.withType(RunTestExecutable) { RunTestExecutable runTask ->
                 task.dependsOn runTask
             }
         }
 
-        tasks.create(TASK_XML, GcovRunTask) { GcovRunTask task ->
+        tasks.create(TASK_XML, GcovReportTask) { GcovReportTask task ->
             task.enabled = gcov.xmlEnabled
             task.resultsDir = new File(coverageFolder, 'xml')
-            task.format = GcovRunTask.OutputFormat.XML
+            task.format = GcovReportTask.OutputFormat.XML
 
             filteredTasks*.withType(RunTestExecutable) { RunTestExecutable runTask ->
                 task.dependsOn runTask
