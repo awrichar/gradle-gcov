@@ -1,14 +1,13 @@
+#!/usr/bin/python
 # encoding: utf-8
 # author:   Jan Hybs
+# url:      https://github.com/x3mSpeedy/Flow123d-python-utils/blob/master/src/coverage/coverage_merge_module.py
+# Modified by Andrew Richardson <andreric@cisco.com>
 
 """
 Using this module user can merge cobertura XML reports.
 Package contains Class CoverageMerge and simple iface to class (single method)
 """
-
-import system.versions
-
-system.versions.require_version_2()
 
 import sys
 import os
@@ -115,6 +114,17 @@ class CoverageMerge (object):
         packages1 = self.filter_xml(xml1)
         packages2 = self.filter_xml(xml2)
 
+        # add XML filename as a package prefix
+        if xmlfile1 != outputfile:
+            for pkg in packages1:
+                filetitle = os.path.splitext(os.path.basename(xmlfile1))[0]
+                pkg.set('name', '.'.join((filetitle, pkg.get('name'))))
+
+        if xmlfile2 != outputfile:
+            for pkg in packages2:
+                filetitle = os.path.splitext(os.path.basename(xmlfile2))[0]
+                pkg.set('name', '.'.join((filetitle, pkg.get('name'))))
+
         # find root
         packages1root = xml1.find(PACKAGES_ROOT)
 
@@ -123,7 +133,7 @@ class CoverageMerge (object):
                    'name', self.merge_packages)
 
         # write result to output file
-        xml1.write(outputfile, encoding="UTF-8", xml_declaration=True)
+        xml1.write(outputfile, encoding="UTF-8")
 
     def filter_xml(self, xmlfile):
         xmlroot = xmlfile.getroot()
@@ -247,3 +257,16 @@ class CoverageMerge (object):
 def merge(options, args):
     """Simple iface method for c api"""
     return CoverageMerge(options, args).execute_merge()
+
+def main ():
+    options = lambda: None
+    options.path = os.getcwd() + '/'
+    options.filename = 'merged.xml'
+    options.loglevel = 'info'
+    options.filteronly = False
+    options.suffix = None
+    options.packagefilters = []
+    return merge(options, sys.argv[1:])
+
+if __name__ == "__main__":
+    main()
