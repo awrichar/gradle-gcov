@@ -27,3 +27,9 @@ All configuration is done via the `gcov` block in the model space. It has the fo
 XML format (default: `false`).
 * **binaryFilter** - a closure invoked for each `NativeBinarySpec` in the project, which should return true to indicate
 if the binary should be configured for coverage.
+
+## License
+
+Author: Andrew Richardson (andreric@cisco.com)
+
+Created for Cisco and released under the terms of the Apache 2.0 License (contribution #143904650).
